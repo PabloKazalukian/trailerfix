@@ -441,23 +441,17 @@ npm run db:reset           # migrate:undo:all + migrate + seed
 
 ---
 
-## Diferencias con `data/Trailerflix.sql`
+## Relación con `data/Trailerflix.sql`
 
-El archivo `data/Trailerflix.sql` es un **script de referencia/educativo** que define un esquema similar pero con diferencias intencionales:
+El archivo `data/Trailerflix.sql` está **alineado 1:1 con las migraciones/seeders** de esta API:
 
-| Aspecto | `data/Trailerflix.sql` | Migraciones/Seeders API |
-|---|---|---|
-| **Nombre BD** | `trailerflix` | `trailerfix_db` (config) |
-| **`users` timestamps** | Solo `created_at` (no `updated_at`) | `createdAt` + `updatedAt` (camelCase, legacy) |
-| **`users` password** | Hash placeholder (`$2b$12$REEMPLAZAR...`) | Hash real generado por seeder con `bcryptjs` |
-| **Usuarios seed** | `dev_demo`, `ana_demo` | `admin` (y `pablo` si se registró via API) |
-| **`content` timestamps** | Solo `created_at` | Solo `created_at` (coincide) |
-| **Tablas puente** | Mismos nombres/columnas | Mismos + `underscored: true` en modelos |
-| **Checks/Constraints** | Definidos en `CREATE TABLE` | Definidos en migraciones (equivalentes) |
-| **Datos demo** | 2 usuarios, 6 contenidos, mismas relaciones | 1 usuario demo principal, mismos 6 contenidos, 4 `user_content` para admin |
-| **Propósito** | Referencia canónica, portable, educativo | Esquema vivo versionado, usado por la API |
+- **DDL idéntico**: 10 tablas con misma estructura, FKs, checks, índices, ENUMs, cascadas.
+- **Nombre de BD**: `trailerfix_db` (coincide con config `DB_NAME`).
+- **`users`**: `createdAt` + `updatedAt` camelCase (legacy, como migración 08).
+- **Seed**: usuario `admin` / `Admin123!` (hash bcrypt real, 10 rounds), mismos 6 contenidos, 10 géneros, 10 actores, 10 temporadas, 4 `user_content` para admin.
+- **Sin extras**: no incluye consultas de ejemplo ni patrones `UPDATE`/`ON DUPLICATE KEY` (lógica en controllers de la API).
 
-> **Recomendación**: Usar migraciones/seeders como fuente de verdad para desarrollo y CI. `Trailerflix.sql` sirve para documentación, onboarding o recrear esquema en otro entorno sin Sequelize.
+> **Fuente de verdad**: migraciones/seeders (`src/database/migrations/*.js`, `src/database/seeders/*.js`). `Trailerflix.sql` sirve como **dump portable** para recrear el esquema en entornos sin Sequelize (onboarding, CI alternativo, docs).
 
 ---
 

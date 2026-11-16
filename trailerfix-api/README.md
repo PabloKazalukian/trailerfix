@@ -70,7 +70,7 @@ El seeder crea el usuario demo:
 | -------- | ----------- |
 | `admin`  | `Admin123!` |
 
-> **Detalle completo del esquema**: ver [`src/database/README.md`](src/database/README.md) (campos, índices, FKs, constraints, asociaciones, configuración Sequelize/CLI, diferencias con `data/Trailerflix.sql`).
+> **Detalle completo del esquema**: ver [`src/database/README.md`](src/database/README.md) (campos, índices, FKs, constraints, asociaciones, configuración Sequelize/CLI, relación con `data/Trailerflix.sql`).
 
 ---
 
@@ -525,4 +525,4 @@ src/
 
 - **Sin paginación** en listados (etapa actual).
 - **Convención de nombres**: tablas nuevas en `snake_case` + `underscored: true`; `users` conserva `createdAt`/`updatedAt` camelCase (alineado en migración `20261116000008-align-users-id-unsigned.js` para `id` UNSIGNED).
-- **BD por defecto**: `trailerfix_db` (config). El script `data/Trailerflix.sql` usa `trailerflix` y difiere en timestamps/usuarios seed — ver [`src/database/README.md`](src/database/README.md#diferencias-con-datatrailerflixsql).
+- **BD por defecto**: `trailerfix_db` (config). El script `data/Trailerflix.sql` está **alineado 1:1** (mismo nombre BD, mismo seed `admin`/`Admin123!`, mismos timestamps) — ver [`src/database/README.md`](src/database/README.md#relación-con-datatrailerflixsql).
