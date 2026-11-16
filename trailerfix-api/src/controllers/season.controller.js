@@ -68,7 +68,7 @@ async function remove(req, res) {
   }
 
   await seasonRepository.delete(season);
-  return res.status(204).end();
+  return res.json({ message: 'Se borró la temporada satisfactoriamente.' });
 }
 
 export default { list, create, update, remove };

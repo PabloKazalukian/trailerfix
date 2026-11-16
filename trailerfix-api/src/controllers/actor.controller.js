@@ -1,4 +1,6 @@
 import actorRepository from '../repositories/actor.repository.js';
+import userContentRepository from '../repositories/userContent.repository.js';
+import { serializeContent, serializeContentList } from '../utils/serializers.js';
 
 async function list(req, res) {
   const search =
@@ -15,6 +17,19 @@ async function getById(req, res) {
   }
 
   return res.json(actor);
+}
+
+async function getContentsByActor(req, res) {
+  const actor = await actorRepository.findById(req.params.id);
+
+  if (!actor) {
+    return res.status(404).json({ error: 'Actor no encontrado' });
+  }
+
+  const contents = await actorRepository.findContentsByActor(req.params.id);
+  const userId = req.user?.id;
+  const serialized = await serializeContentList(contents, userId, userContentRepository);
+  return res.json(serialized);
 }
 
 async function create(req, res) {
@@ -41,7 +56,7 @@ async function remove(req, res) {
   }
 
   await actorRepository.delete(actor);
-  return res.status(204).end();
+  return res.json({ message: 'Se borró el actor satisfactoriamente.' });
 }
 
-export default { list, getById, create, update, remove };
+export default { list, getById, getContentsByActor, create, update, remove };

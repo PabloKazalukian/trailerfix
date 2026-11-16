@@ -41,7 +41,7 @@ async function remove(req, res) {
   }
 
   await genreRepository.delete(genre);
-  return res.status(204).end();
+  return res.json({ message: 'Se borró el género satisfactoriamente.' });
 }
 
 export default { list, getById, create, update, remove };

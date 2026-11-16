@@ -46,6 +46,19 @@ const userContentRepository = {
     });
   },
 
+  findStatusesByUserAndContentIds(userId, contentIds) {
+    if (contentIds.length === 0) {
+      return [];
+    }
+    return UserContent.findAll({
+      where: {
+        userId,
+        contentId: contentIds,
+      },
+      attributes: ['contentId', 'status'],
+    });
+  },
+
   create(payload) {
     return UserContent.create(payload);
   },

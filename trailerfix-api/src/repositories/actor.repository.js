@@ -1,5 +1,12 @@
 import { Op } from 'sequelize';
-import { Actor } from '../database/models/index.js';
+import {
+  Actor,
+  Content,
+  Movie,
+  Series,
+  Season,
+  Genre,
+} from '../database/models/index.js';
 
 const actorRepository = {
   findAll(search) {
@@ -31,6 +38,31 @@ const actorRepository = {
     }
 
     return Actor.findAll({ where: { id: ids } });
+  },
+
+  findContentsByActor(actorId) {
+    return Content.findAll({
+      include: [
+        { model: Movie, as: 'movie' },
+        {
+          model: Series,
+          as: 'series',
+          include: [{ model: Season, as: 'seasons' }],
+        },
+        {
+          model: Genre,
+          as: 'genres',
+          through: { attributes: [] },
+        },
+        {
+          model: Actor,
+          as: 'actors',
+          through: { attributes: ['characterName', 'creditOrder'] },
+          where: { id: actorId },
+        },
+      ],
+      order: [['title', 'ASC']],
+    });
   },
 
   create({ firstName, lastName }) {

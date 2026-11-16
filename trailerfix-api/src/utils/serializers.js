@@ -1,4 +1,4 @@
-export function serializeContent(content) {
+export function serializeContent(content, userStatusMap = null) {
   const data = typeof content.toJSON === 'function' ? content.toJSON() : content;
 
   if (Array.isArray(data.actors)) {
@@ -21,7 +21,25 @@ export function serializeContent(content) {
       });
   }
 
+  if (userStatusMap && data.id) {
+    data.userStatus = userStatusMap.get(data.id) ?? null;
+  }
+
   return data;
+}
+
+export function serializeContentList(contents, userId, userContentRepository) {
+  if (!userId || contents.length === 0) {
+    return contents.map((c) => serializeContent(c));
+  }
+
+  const contentIds = contents.map((c) => c.id);
+  return userContentRepository
+    .findStatusesByUserAndContentIds(userId, contentIds)
+    .then((statuses) => {
+      const userStatusMap = new Map(statuses.map((s) => [s.contentId, s.status]));
+      return contents.map((c) => serializeContent(c, userStatusMap));
+    });
 }
 
 export function serializeUserContent(entry) {

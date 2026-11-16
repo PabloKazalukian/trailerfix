@@ -99,7 +99,7 @@ async function remove(req, res) {
   }
 
   await userContentRepository.delete(entry);
-  return res.status(204).end();
+  return res.json({ message: 'Se borró el contenido de tu lista satisfactoriamente.' });
 }
 
 export default { list, create, update, remove };

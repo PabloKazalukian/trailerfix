@@ -5,6 +5,14 @@ function toNumber(value, fallback) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function parseCorsOrigins(value) {
+  if (!value) return [];
+  return value
+    .split(',')
+    .map((v) => v.trim())
+    .filter(Boolean);
+}
+
 const environment = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
   port: toNumber(process.env.PORT, 3000),
@@ -22,6 +30,16 @@ const environment = {
     expiresIn: process.env.JWT_EXPIRES_IN ?? '1h',
   },
   bcryptSaltRounds: toNumber(process.env.BCRYPT_SALT_ROUNDS, 10),
+  cookie: {
+    name: process.env.COOKIE_NAME ?? 'trailerfix_token',
+    secure: process.env.COOKIE_SECURE === 'true' ? true : process.env.COOKIE_SECURE === 'false' ? false : 'auto',
+    sameSite: process.env.COOKIE_SAME_SITE ?? 'lax',
+    domain: process.env.COOKIE_DOMAIN ?? undefined,
+    maxAge: toNumber(process.env.COOKIE_MAX_AGE, 1000 * 60 * 60),
+  },
+  cors: {
+    origins: parseCorsOrigins(process.env.CORS_ORIGIN),
+  },
 };
 
 if (!environment.jwt.secret) {

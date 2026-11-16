@@ -1,11 +1,19 @@
 import userRepository from '../repositories/user.repository.js';
 import { verifyToken } from '../utils/jwt.js';
+import cookieConfig from '../config/cookies.js';
 
 export default async function authenticate(req, res, next) {
-  const header = req.headers.authorization ?? '';
-  const [scheme, token] = header.split(' ');
+  let token = req.cookies?.[cookieConfig.name];
 
-  if (scheme !== 'Bearer' || !token) {
+  if (!token) {
+    const header = req.headers.authorization ?? '';
+    const [scheme, headerToken] = header.split(' ');
+    if (scheme === 'Bearer' && headerToken) {
+      token = headerToken;
+    }
+  }
+
+  if (!token) {
     return res.status(401).json({ error: 'Token de autenticacion requerido' });
   }
 

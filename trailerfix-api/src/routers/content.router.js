@@ -2,6 +2,7 @@ import { Router } from 'express';
 import contentController from '../controllers/content.controller.js';
 import asyncHandler from '../middlewares/asyncHandler.js';
 import authenticate from '../middlewares/authenticate.js';
+import optionalAuth from '../middlewares/optionalAuth.js';
 import validateIdParams from '../middlewares/validateIdParams.js';
 import {
   validateContentActorCreate,
@@ -14,9 +15,10 @@ import {
 
 const router = Router();
 const auth = asyncHandler(authenticate);
+const optAuth = asyncHandler(optionalAuth);
 
-router.get('/', asyncHandler(contentController.list));
-router.get('/:id', validateIdParams('id'), asyncHandler(contentController.getById));
+router.get('/', optAuth, asyncHandler(contentController.list));
+router.get('/:id', optAuth, validateIdParams('id'), asyncHandler(contentController.getById));
 router.post('/', auth, validateContentCreate, asyncHandler(contentController.create));
 router.patch(
   '/:id',

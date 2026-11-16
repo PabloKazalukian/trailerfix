@@ -1,7 +1,8 @@
 import actorRepository from '../repositories/actor.repository.js';
 import contentRepository from '../repositories/content.repository.js';
 import genreRepository from '../repositories/genre.repository.js';
-import { serializeContent } from '../utils/serializers.js';
+import userContentRepository from '../repositories/userContent.repository.js';
+import { serializeContent, serializeContentList } from '../utils/serializers.js';
 
 const TYPES = ['MOVIE', 'SERIES'];
 const MIN_YEAR = 1888;
@@ -60,7 +61,9 @@ async function list(req, res) {
   }
 
   const contents = await contentRepository.findAll(filters);
-  return res.json(contents.map(serializeContent));
+  const userId = req.user?.id;
+  const serialized = await serializeContentList(contents, userId, userContentRepository);
+  return res.json(serialized);
 }
 
 async function getById(req, res) {
@@ -70,7 +73,11 @@ async function getById(req, res) {
     return res.status(404).json({ error: 'Contenido no encontrado' });
   }
 
-  return res.json(serializeContent(content));
+  const userId = req.user?.id;
+  const serialized = userId
+    ? await serializeContentList([content], userId, userContentRepository)
+    : serializeContent(content);
+  return res.json(Array.isArray(serialized) ? serialized[0] : serialized);
 }
 
 async function create(req, res) {
@@ -123,7 +130,7 @@ async function remove(req, res) {
   }
 
   await contentRepository.delete(content);
-  return res.status(204).end();
+  return res.json({ message: 'Se borró el contenido satisfactoriamente.' });
 }
 
 async function getContentOr404(req, res) {
