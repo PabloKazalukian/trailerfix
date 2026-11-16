@@ -7,6 +7,15 @@ const DEMO_USER = {
 };
 
 export async function up(queryInterface) {
+  const [existing] = await queryInterface.sequelize.query(
+    "SELECT id FROM users WHERE username = 'admin' LIMIT 1",
+  );
+
+  if (existing.length > 0) {
+    console.log('Usuario demo ya existe, seeder saltado');
+    return;
+  }
+
   const saltRounds = Number(process.env.BCRYPT_SALT_ROUNDS) || 10;
   const password = await bcrypt.hash(DEMO_USER.password, saltRounds);
   const now = new Date();

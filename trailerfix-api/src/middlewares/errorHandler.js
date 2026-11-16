@@ -4,7 +4,32 @@ export default function errorHandler(err, req, res, next) {
   }
 
   if (err.name === 'SequelizeUniqueConstraintError') {
-    return res.status(409).json({ error: 'El username ya esta en uso' });
+    const fields = Object.keys(err.fields ?? {});
+    const message = fields.includes('username')
+      ? 'El username ya esta en uso'
+      : 'Ya existe un registro con esos datos';
+
+    return res.status(409).json({
+      error: message,
+      details: err.errors?.map((validationError) => validationError.message),
+    });
+  }
+
+  if (err.name === 'SequelizeForeignKeyConstraintError') {
+    return res.status(409).json({
+      error: 'La referencia indicada no existe o esta en uso',
+    });
+  }
+
+  if (
+    err.name === 'SequelizeDatabaseError' &&
+    (err.parent?.code === 'ER_CHECK_CONSTRAINT_VIOLATED' ||
+      /check constraint/i.test(err.message))
+  ) {
+    return res.status(400).json({
+      error: 'Datos invalidos',
+      details: ['Una restriccion de la base de datos rechazo los datos enviados'],
+    });
   }
 
   if (err.name === 'SequelizeValidationError') {
