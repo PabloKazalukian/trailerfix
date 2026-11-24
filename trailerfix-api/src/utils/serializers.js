@@ -21,6 +21,34 @@ export function serializeContent(content, userStatusMap = null) {
       });
   }
 
+  // Flatten movie and series fields into content for easier frontend consumption
+  if (data.movie) {
+    data.durationMinutes = data.movie.durationMinutes;
+    data.budget = data.movie.budget;
+    data.revenue = data.movie.revenue;
+    data.originalTitle = data.movie.originalTitle;
+    data.runtimeMinutes = data.movie.runtimeMinutes;
+    delete data.movie;
+  }
+
+  if (data.series) {
+    data.endYear = data.series.endYear;
+    data.status = data.series.status;
+    data.numberOfSeasons = data.series.numberOfSeasons;
+    data.numberOfEpisodes = data.series.numberOfEpisodes;
+    data.firstAirDate = data.series.firstAirDate;
+    data.lastAirDate = data.series.lastAirDate;
+    data.networks = data.series.networks;
+    data.inProduction = data.series.inProduction;
+    data.seasons = data.series.seasons;
+    delete data.series;
+  }
+
+  // Ensure rating is a number (not string) if present
+  if (data.rating !== null && data.rating !== undefined) {
+    data.rating = Number(data.rating);
+  }
+
   if (userStatusMap && data.id) {
     data.userStatus = userStatusMap.get(data.id) ?? null;
   }

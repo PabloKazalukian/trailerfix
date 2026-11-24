@@ -75,21 +75,82 @@ const contentRepository = {
     return count > 0;
   },
 
-  create({ title, description, releaseYear, type, durationMinutes, endYear, status }) {
+  create({
+    title,
+    description,
+    releaseYear,
+    type,
+    durationMinutes,
+    endYear,
+    status,
+    // Extended fields
+    trailerUrl,
+    posterUrl,
+    backdropUrl,
+    rating,
+    voteCount,
+    imdbId,
+    tmdbId,
+    originalLanguage,
+    originCountry,
+    // Movie specific
+    budget,
+    revenue,
+    originalTitle,
+    runtimeMinutes,
+    // Series specific
+    numberOfSeasons,
+    numberOfEpisodes,
+    firstAirDate,
+    lastAirDate,
+    networks,
+    inProduction,
+  }) {
     return sequelize.transaction(async (transaction) => {
       const content = await Content.create(
-        { title, description, releaseYear, type },
+        {
+          title,
+          description,
+          releaseYear,
+          type,
+          trailerUrl,
+          posterUrl,
+          backdropUrl,
+          rating,
+          voteCount,
+          imdbId,
+          tmdbId,
+          originalLanguage,
+          originCountry,
+        },
         { transaction },
       );
 
       if (type === 'MOVIE') {
         await Movie.create(
-          { contentId: content.id, durationMinutes },
+          {
+            contentId: content.id,
+            durationMinutes,
+            budget,
+            revenue,
+            originalTitle,
+            runtimeMinutes,
+          },
           { transaction },
         );
       } else {
         await Series.create(
-          { contentId: content.id, endYear, status },
+          {
+            contentId: content.id,
+            endYear,
+            status,
+            numberOfSeasons,
+            numberOfEpisodes,
+            firstAirDate,
+            lastAirDate,
+            networks,
+            inProduction,
+          },
           { transaction },
         );
       }
@@ -103,27 +164,77 @@ const contentRepository = {
 
   update(content, payload) {
     return sequelize.transaction(async (transaction) => {
-      const { durationMinutes, endYear, status, ...contentPayload } = payload;
+      const {
+        durationMinutes,
+        endYear,
+        status,
+        // Extended fields
+        trailerUrl,
+        posterUrl,
+        backdropUrl,
+        rating,
+        voteCount,
+        imdbId,
+        tmdbId,
+        originalLanguage,
+        originCountry,
+        // Movie specific
+        budget,
+        revenue,
+        originalTitle,
+        runtimeMinutes,
+        // Series specific
+        numberOfSeasons,
+        numberOfEpisodes,
+        firstAirDate,
+        lastAirDate,
+        networks,
+        inProduction,
+        ...contentPayload
+      } = payload;
 
-      await content.update(contentPayload, { transaction });
+      // Update content fields
+      await content.update(
+        {
+          ...contentPayload,
+          trailerUrl,
+          posterUrl,
+          backdropUrl,
+          rating,
+          voteCount,
+          imdbId,
+          tmdbId,
+          originalLanguage,
+          originCountry,
+        },
+        { transaction },
+      );
 
       if (content.type === 'MOVIE') {
-        if (durationMinutes !== undefined) {
-          await Movie.update(
-            { durationMinutes },
-            { where: { contentId: content.id }, transaction },
-          );
+        const moviePayload = {};
+        if (durationMinutes !== undefined) moviePayload.durationMinutes = durationMinutes;
+        if (budget !== undefined) moviePayload.budget = budget;
+        if (revenue !== undefined) moviePayload.revenue = revenue;
+        if (originalTitle !== undefined) moviePayload.originalTitle = originalTitle;
+        if (runtimeMinutes !== undefined) moviePayload.runtimeMinutes = runtimeMinutes;
+
+        if (Object.keys(moviePayload).length > 0) {
+          await Movie.update(moviePayload, {
+            where: { contentId: content.id },
+            transaction,
+          });
         }
       } else {
         const seriesPayload = {};
 
-        if (endYear !== undefined) {
-          seriesPayload.endYear = endYear;
-        }
-
-        if (status !== undefined) {
-          seriesPayload.status = status;
-        }
+        if (endYear !== undefined) seriesPayload.endYear = endYear;
+        if (status !== undefined) seriesPayload.status = status;
+        if (numberOfSeasons !== undefined) seriesPayload.numberOfSeasons = numberOfSeasons;
+        if (numberOfEpisodes !== undefined) seriesPayload.numberOfEpisodes = numberOfEpisodes;
+        if (firstAirDate !== undefined) seriesPayload.firstAirDate = firstAirDate;
+        if (lastAirDate !== undefined) seriesPayload.lastAirDate = lastAirDate;
+        if (networks !== undefined) seriesPayload.networks = networks;
+        if (inProduction !== undefined) seriesPayload.inProduction = inProduction;
 
         if (Object.keys(seriesPayload).length > 0) {
           await Series.update(seriesPayload, {
