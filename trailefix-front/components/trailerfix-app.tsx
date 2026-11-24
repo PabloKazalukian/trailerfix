@@ -161,11 +161,12 @@ function DetailDialog({ item, onClose, onActor, onStatus, status }: { item: Cont
       {videoId ? (
         <div className="detail-trailer">
           <iframe 
-            src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&disablekb=1&iv_load_policy=3&controls=1&fs=1&showinfo=0&color=white&origin=https://192.168.1.36:3000`}
+            src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&controls=1&fs=1&showinfo=0&color=white&enablejsapi=1&origin=https://192.168.1.36:3000`}
             title={`Tráiler de ${item.title}`}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
             loading="eager"
+            tabIndex={0}
           />
         </div>
       ) : backdropUrl ? (
@@ -274,7 +275,7 @@ export function TrailerfixApp() {
   return <main className="app-shell"><aside className={`sidebar ${mobileNav ? "sidebar-open" : ""}`}><button className="brand" onClick={() => { setSection("Inicio"); setMobileNav(false) }}><span className="brand-mark"><Clapperboard /></span><span>trailerfix<span className="brand-period">.</span><small>EL CINE A TU MANERA</small></span></button><div className="side-label">DESCUBRE</div><nav className="side-nav" aria-label="Navegación principal">{navItems.slice(0,3).map(item => <button key={item.name} onClick={() => { setSection(item.name); setMobileNav(false) }} className={`nav-link ${section === item.name ? "active" : ""}`}><item.icon /><span>{item.name}</span>{section === item.name && <i />}</button>)}</nav><div className="side-label library-label">TU ESPACIO</div><nav className="side-nav"><button onClick={() => { setSection("Mis films"); setMobileNav(false) }} className={`nav-link ${section === "Mis films" ? "active" : ""}`}><Bookmark /><span>Mis films</span><span className="nav-count">{myContent.length || "—"}</span></button></nav><div className="sidebar-bottom"><div className="sidebar-note"><div className="note-icon"><Play fill="currentColor" /></div><p>Una buena historia<br />siempre encuentra<br />su momento.</p><span>TRAILERFIX · 2026</span></div><div className="sidebar-footer">HECHO PARA QUIENES AMAN LAS HISTORIAS</div></div></aside>
     {mobileNav && <button className="mobile-scrim" aria-label="Cerrar menú" onClick={() => setMobileNav(false)} />}
     <section className="main-area"><header className="topbar"><button className="mobile-menu icon-button" aria-label="Abrir menú" onClick={() => setMobileNav(true)}><Menu /></button><div className="breadcrumbs">TRAILERFIX <span>/</span> <strong>{section.toUpperCase()}</strong></div><label className="top-search"><Search /><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Buscar títulos..." aria-label="Buscar películas y series" /><kbd>⌘ K</kbd></label><div className="top-actions">{user ? <><span className="user-greeting">Hola, {user.name}</span><button className="login-button" onClick={logout}>Salir <span>↗</span></button></> : <button className="login-button" onClick={() => { setAuthError(""); setModal("login") }}>Entrar <span>↗</span></button>}</div></header>
-    <div className="page-content"><section className="hero"><div className="hero-copy"><div className="hero-kicker"><span className="kicker-line" /> TU UNIVERSO DE CINE <span>01 / 04</span></div><h1>Historias que<br />se quedan <em>contigo.</em></h1><p>Encuentra tu próxima película favorita, descubre nuevas series y lleva tu propio registro de historias.</p><div className="hero-cta"><button className="primary-button" onClick={() => setSection("Películas")}><Play fill="currentColor" /> Explorar películas</button><button className="text-button" onClick={() => setSection("Series")}>Ver series <span>↗</span></button></div></div><div className="hero-art" aria-label="Imagen destacada del catálogo">
+    <div className="page-content"><section className="hero"><div className="hero-copy"><div className="hero-kicker"><span className="kicker-line" /> TU UNIVERSO DE CINE <span>01 / 04</span></div><h1>Historias que<br />se quedan <em>contigo.</em></h1><p>Encuentra tu próxima película favorita, descubre nuevas series y lleva tu propio registro de historias.</p></div><div className="hero-art" aria-label="Imagen destacada del catálogo">
       {(() => {
         // Find first item with backdrop or poster for featured image
         const featured = content.find(item => getBackdropUrl(item) || getPosterUrl(item))
@@ -286,15 +287,13 @@ export function TrailerfixApp() {
           return (
             <div className="hero-trailer">
               <iframe 
-                src={`https://www.youtube.com/embed/${featuredTrailerId}?autoplay=1&mute=1&loop=1&playlist=${featuredTrailerId}&controls=1&modestbranding=1&rel=0&playsinline=1&disablekb=1&iv_load_policy=3&fs=1&showinfo=0&color=white&origin=https://192.168.1.36:3000`}
+                src={`https://www.youtube.com/embed/${featuredTrailerId}?autoplay=1&mute=1&loop=1&playlist=${featuredTrailerId}&controls=1&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&fs=1&showinfo=0&color=white&enablejsapi=1&origin=https://192.168.1.36:3000`}
                 title={`Tráiler destacado: ${featuredTitle}`}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 loading="eager"
+                tabIndex={0}
               />
-              <div className="hero-overlay">
-                <div className="hero-art-label"><span>TRAILERFIX ORIGINAL</span><span>01—∞</span></div>
-              </div>
             </div>
           )
         }
