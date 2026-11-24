@@ -1,0 +1,125 @@
+import sequelize from './src/config/database.js';
+
+async function test() {
+  try {
+    const contents = [
+      {
+        id: 1,
+        title: 'Breaking Bad',
+        description: 'Un profesor de quimica comienza a fabricar metanfetamina.',
+        release_year: 2008,
+        type: 'SERIES',
+        trailer_url: 'https://www.youtube.com/watch?v=HhesaQXLuRY',
+        poster_url: 'https://image.tmdb.org/t/p/w500/ggFHVNu6YYI5L9fCf0p0UDDUMdY.jpg',
+        backdrop_url: 'https://image.tmdb.org/t/p/w1280/tsRy63Mu5CU8etL1C7ZlhhYABaA.jpg',
+        rating: 9.5,
+        vote_count: 1800000,
+        imdb_id: 'tt0903747',
+        tmdb_id: 1396,
+        original_language: 'en',
+        origin_country: JSON.stringify(['US']),
+        created_at: new Date('2026-10-10 21:30:00'),
+      },
+      {
+        id: 2,
+        title: 'Interstellar',
+        description: 'Un grupo de astronautas busca un nuevo hogar para la humanidad.',
+        release_year: 2014,
+        type: 'MOVIE',
+        trailer_url: 'https://www.youtube.com/watch?v=zSWdZVtXT7E',
+        poster_url: 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg',
+        backdrop_url: 'https://image.tmdb.org/t/p/w1280/xJHokMbljvjADYdit5fK5VQsXEG.jpg',
+        rating: 8.7,
+        vote_count: 1700000,
+        imdb_id: 'tt0816692',
+        tmdb_id: 157336,
+        original_language: 'en',
+        origin_country: JSON.stringify(['US', 'GB']),
+        created_at: new Date('2026-10-10 21:30:00'),
+      },
+      {
+        id: 3,
+        title: 'The Dark Knight',
+        description: 'Batman se enfrenta al Joker en Gotham.',
+        release_year: 2008,
+        type: 'MOVIE',
+        trailer_url: 'https://www.youtube.com/watch?v=EXeTwQWrcwY',
+        poster_url: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg',
+        backdrop_url: 'https://image.tmdb.org/t/p/w1280/hqkIcbrOHL86UncnHIsHVcVmzue.jpg',
+        rating: 9.0,
+        vote_count: 2800000,
+        imdb_id: 'tt0468569',
+        tmdb_id: 155,
+        original_language: 'en',
+        origin_country: JSON.stringify(['US', 'GB']),
+        created_at: new Date('2026-10-10 21:30:00'),
+      },
+      {
+        id: 4,
+        title: 'Dark',
+        description: 'La desaparicion de un nino revela secretos entre varias familias.',
+        release_year: 2017,
+        type: 'SERIES',
+        trailer_url: 'https://www.youtube.com/watch?v=rrwycJ08PSA',
+        poster_url: 'https://image.tmdb.org/t/p/w500/rjbNpRMoVvqHmM1gQ8CfK8kLMZp.jpg',
+        backdrop_url: 'https://image.tmdb.org/t/p/w1280/osUT5uOTkdhFnIk5rNSj8S7gU3J.jpg',
+        rating: 8.7,
+        vote_count: 450000,
+        imdb_id: 'tt5753852',
+        tmdb_id: 64683,
+        original_language: 'de',
+        origin_country: JSON.stringify(['DE']),
+        created_at: new Date('2026-10-10 21:30:00'),
+      },
+      {
+        id: 5,
+        title: 'The Matrix',
+        description: 'Un programador descubre que la realidad que conoce es una simulacion.',
+        release_year: 1999,
+        type: 'MOVIE',
+        trailer_url: 'https://www.youtube.com/watch?v=vKQi3bBA1y8',
+        poster_url: 'https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg',
+        backdrop_url: 'https://image.tmdb.org/t/p/w1280/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg',
+        rating: 8.7,
+        vote_count: 2100000,
+        imdb_id: 'tt0133093',
+        tmdb_id: 603,
+        original_language: 'en',
+        origin_country: JSON.stringify(['US']),
+        created_at: new Date('2026-10-10 21:30:00'),
+      },
+      {
+        id: 6,
+        title: 'The Office',
+        description: 'Comedia sobre la vida cotidiana de los empleados de una oficina.',
+        release_year: 2005,
+        type: 'SERIES',
+        trailer_url: 'https://www.youtube.com/watch?v=32J8_BwUTyk',
+        poster_url: 'https://image.tmdb.org/t/p/w500/qWnJzyZh2qLO1sGZkpMg1OYORuF.jpg',
+        backdrop_url: 'https://image.tmdb.org/t/p/w1280/3E98l4PjR4cG3Zq3SfE3UgIxDyS.jpg',
+        rating: 9.0,
+        vote_count: 550000,
+        imdb_id: 'tt0386676',
+        tmdb_id: 2316,
+        original_language: 'en',
+        origin_country: JSON.stringify(['US']),
+        created_at: new Date('2026-10-10 21:30:00'),
+      },
+    ];
+
+    await sequelize.query('DELETE FROM content WHERE id BETWEEN 1 AND 6');
+    console.log('Old content deleted');
+
+    for (const content of contents) {
+      await sequelize.query(`
+        INSERT INTO content (id, title, description, release_year, type, trailer_url, poster_url, backdrop_url, rating, vote_count, imdb_id, tmdb_id, original_language, origin_country, created_at)
+        VALUES (${content.id}, "${content.title}", "${content.description}", ${content.release_year}, "${content.type}", "${content.trailer_url}", "${content.poster_url}", "${content.backdrop_url}", ${content.rating}, ${content.vote_count}, "${content.imdb_id}", ${content.tmdb_id}, "${content.original_language}", '${content.origin_country}', "${content.created_at.toISOString().slice(0, 19).replace('T', ' ')}")
+      `);
+    }
+    console.log('Content seeded with trailers!');
+  } catch (e) {
+    console.error('Error:', e.message);
+  }
+}
+
+test();

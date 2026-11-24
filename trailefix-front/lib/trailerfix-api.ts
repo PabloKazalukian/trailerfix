@@ -100,4 +100,7 @@ export const api = {
     await request(`/me/content/${contentId}`, { method: "PATCH", body: JSON.stringify({ status }) })
   },
   async removeFromList(contentId: number): Promise<void> { await request(`/me/content/${contentId}`, { method: "DELETE" }) },
+  async createContent(data: Partial<Content>): Promise<Content> {
+    return request<Content>("/contents", { method: "POST", body: JSON.stringify(data) })
+  },
 }
