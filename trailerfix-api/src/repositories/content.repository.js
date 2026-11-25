@@ -22,6 +22,8 @@ function buildIncludes({ genreId, genreName } = {}) {
     genreWhere.name = genreName;
   }
 
+  const hasGenreFilter = Object.keys(genreWhere).length > 0;
+
   return [
     { model: Movie, as: 'movie' },
     {
@@ -33,7 +35,7 @@ function buildIncludes({ genreId, genreName } = {}) {
       model: Genre,
       as: 'genres',
       through: { attributes: [] },
-      ...(Object.keys(genreWhere).length > 0 ? { where: genreWhere } : {}),
+      ...(hasGenreFilter ? { where: genreWhere, required: true } : {}),
     },
     {
       model: Actor,
