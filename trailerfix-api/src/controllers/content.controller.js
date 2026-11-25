@@ -60,6 +60,16 @@ async function list(req, res) {
     return res.status(400).json({ error: 'Datos invalidos', details: errors });
   }
 
+  // Log de filtros aplicados
+  const logParts = [];
+  if (filters.type) logParts.push(`tipo=${filters.type}`);
+  if (filters.title) logParts.push(`titulo="${filters.title}"`);
+  if (filters.genreId) logParts.push(`genreId=${filters.genreId}`);
+  if (filters.genreName) logParts.push(`genero="${filters.genreName}"`);
+  if (filters.releaseYear) logParts.push(`año=${filters.releaseYear}`);
+  
+  console.log(`[GET /api/contents] Filtros: ${logParts.length ? logParts.join(', ') : 'sin filtros'} | User: ${req.user?.id ?? 'anon'}`);
+
   const contents = await contentRepository.findAll(filters);
   const userId = req.user?.id;
   const serialized = await serializeContentList(contents, userId, userContentRepository);
