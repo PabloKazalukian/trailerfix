@@ -103,4 +103,7 @@ export const api = {
   async createContent(data: Partial<Content>): Promise<Content> {
     return request<Content>("/contents", { method: "POST", body: JSON.stringify(data) })
   },
+  async deleteContent(id: number): Promise<void> {
+    await request(`/contents/${id}`, { method: "DELETE" })
+  },
 }

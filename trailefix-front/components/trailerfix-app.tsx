@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { api, type Actor, type Content, type Genre, type User, type UserContent } from "@/lib/trailerfix-api"
-import { Bookmark, Check, ChevronDown, Clapperboard, Film, LoaderCircle, LogIn, Menu, Play, Search, SlidersHorizontal, Tv, UserRound, X, Image as ImageIcon, Plus, X as XIcon } from "lucide-react"
+import { Bookmark, Check, ChevronDown, Clapperboard, Film, LoaderCircle, LogIn, Menu, Play, Search, SlidersHorizontal, Tv, UserRound, X, Image as ImageIcon, Plus, X as XIcon, Trash2 } from "lucide-react"
 
 type Section = "Inicio" | "Series" | "Películas" | "Mis films"
 type Modal = "login" | "register" | null
@@ -80,6 +80,7 @@ type MovieFormData = {
   description: string
   releaseYear: string
   trailerUrl: string
+  posterUrl: string
 }
 
 function CreateMovieDialog({ onClose, onSubmit, error, busy }: { onClose: () => void; onSubmit: (data: Partial<Content>) => void; error: string; busy: boolean }) {
@@ -106,6 +107,7 @@ function CreateMovieDialog({ onClose, onSubmit, error, busy }: { onClose: () => 
       description: "",
       releaseYear: "",
       trailerUrl: "",
+      posterUrl: "",
     }
   })
 
@@ -133,6 +135,7 @@ function CreateMovieDialog({ onClose, onSubmit, error, busy }: { onClose: () => 
       description: formData.description?.trim() || undefined,
       releaseYear: formData.releaseYear ? parseInt(formData.releaseYear) : undefined,
       trailerUrl: formData.trailerUrl?.trim() || undefined,
+      posterUrl: formData.posterUrl?.trim() || undefined,
     }
     onSubmit(submitData)
   }
@@ -169,6 +172,10 @@ function CreateMovieDialog({ onClose, onSubmit, error, busy }: { onClose: () => 
               URL del tráiler (YouTube)
               <input name="trailerUrl" autoComplete="off" placeholder="https://youtu.be/VIDEO_ID o https://www.youtube.com/watch?v=VIDEO_ID" value={formData.trailerUrl} onChange={e => handleChange("trailerUrl", e.target.value)} />
             </label>
+            <label className="full-width">
+              URL de la imagen de presentación (Poster)
+              <input name="posterUrl" autoComplete="off" placeholder="https://ejemplo.com/poster.jpg" value={formData.posterUrl} onChange={e => handleChange("posterUrl", e.target.value)} />
+            </label>
           </div>
           {error && <p className="form-error" role="alert">{error}</p>}
           <div className="dialog-actions">
@@ -183,10 +190,23 @@ function CreateMovieDialog({ onClose, onSubmit, error, busy }: { onClose: () => 
   )
 }
 
-function DetailDialog({ item, onClose, onActor, onStatus, status }: { item: Content; onClose: () => void; onActor: (actor: Actor) => void; onStatus: (item: Content, status: "WATCHED" | "WATCHLIST") => void; status?: string | null }) {
+function DetailDialog({ item, onClose, onActor, onStatus, onDelete, user, status }: { item: Content; onClose: () => void; onActor: (actor: Actor) => void; onStatus: (item: Content, status: "WATCHED" | "WATCHLIST") => void; onDelete: (item: Content) => void; user: User | null; status?: string | null }) {
   const videoId = extractYouTubeId(item.trailerUrl)
   const backdropUrl = getBackdropUrl(item)
-  
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDelete = async () => {
+    setDeleting(true)
+    try {
+      await onDelete(item)
+      onClose()
+    } catch (error) {
+      console.error("Error deleting content:", error)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return <div className="modal-backdrop detail-backdrop" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}><section className="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-title"><button className="icon-button modal-close" onClick={onClose} aria-label="Cerrar"><X /></button><div className="detail-visual">
       {videoId ? (
         <div className="detail-trailer">
@@ -207,7 +227,7 @@ function DetailDialog({ item, onClose, onActor, onStatus, status }: { item: Cont
         <div className="detail-art"><Play fill="currentColor" /><span>ESPACIO PARA TRÁILER O IMAGEN</span><span className="visual-caption">PREVIEW · TRAILERFIX</span></div>
       )}
     </div><div className="detail-content"><p className="eyebrow">{item.type === "SERIES" ? "SERIE" : "PELÍCULA"} · {item.releaseYear || "AÑO POR CONFIRMAR"}</p><h2 id="detail-title">{item.title}</h2><p className="detail-description">{item.description || "La sinopsis de este título aparecerá aquí cuando esté disponible."}</p><div className="detail-facts">{item.durationMinutes ? <span>{item.durationMinutes} min</span> : null}{item.endYear ? <span>{item.releaseYear} — {item.endYear}</span> : null}{item.status ? <span>{item.status === "COMPLETED" ? "Finalizada" : item.status === "ONGOING" ? "En emisión" : "Cancelada"}</span> : null}{(item.genres || []).map(g => <span key={g.id}>{g.name}</span>)}</div>
-    <div className="detail-actions"><button className="primary-button" onClick={() => onStatus(item, "WATCHLIST")}><Bookmark /> {status === "WATCHLIST" ? "En mi lista" : "Quiero verla"}</button><button className="secondary-button" onClick={() => onStatus(item, "WATCHED")}><Check /> {status === "WATCHED" ? "Ya la vi" : "Marcar vista"}</button></div>
+    <div className="detail-actions"><button className="primary-button" onClick={() => onStatus(item, "WATCHLIST")}><Bookmark /> {status === "WATCHLIST" ? "En mi lista" : "Quiero verla"}</button><button className="secondary-button" onClick={() => onStatus(item, "WATCHED")}><Check /> {status === "WATCHED" ? "Ya la vi" : "Marcar vista"}</button>{user && <button className="danger-button" onClick={handleDelete} disabled={deleting}><Trash2 /> {deleting ? <LoaderCircle className="spin" /> : "Eliminar"}</button>}</div>
     <section className="cast-section"><div className="section-label"><span>ELENCO</span><span>{item.actors?.length || 0} créditos</span></div>{item.actors?.length ? <div className="cast-list">{item.actors.slice().sort((a,b) => (a.creditOrder || 999) - (b.creditOrder || 999)).map(actor => <button className="cast-person" key={actor.id} onClick={() => onActor(actor)}><span className="cast-avatar"><UserRound /></span><span><strong>{actorName(actor)}</strong><small>{actor.characterName || "Reparto"}</small></span><span className="cast-arrow">↗</span></button>)}</div> : <p className="muted">El elenco aparecerá aquí cuando esté disponible.</p>}</section>
     {item.type === "SERIES" && <section className="season-section"><div className="section-label"><span>TEMPORADAS</span><span>{item.seasons?.length || 0} temporadas</span></div>{item.seasons?.length ? item.seasons.map(season => <div className="season-row" key={season.id}><span className="season-number">{String(season.seasonNumber).padStart(2, "0")}</span><span><strong>Temporada {season.seasonNumber}</strong><small>{season.releaseYear} · {season.episodeCount} episodios</small></span><ChevronDown /></div>) : <p className="muted">Temporadas pendientes de cargar.</p>}</section>}</div></section></div>
 }
@@ -306,6 +326,17 @@ export function TrailerfixApp() {
     }
   }
 
+  async function handleDeleteContent(item: Content) {
+    if (!user) { setModal("login"); setNotice("Inicia sesión para eliminar contenido."); return }
+    try {
+      await api.deleteContent(item.id)
+      setNotice(`${item.type === "SERIES" ? "Serie" : "Película"} eliminada correctamente.`)
+      await loadContent()
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "No se pudo eliminar el contenido.")
+    }
+  }
+
   return <main className="app-shell"><aside className={`sidebar ${mobileNav ? "sidebar-open" : ""}`}><button className="brand" onClick={() => { setSection("Inicio"); setMobileNav(false) }}><span className="brand-mark"><Clapperboard /></span><span>trailerfix<span className="brand-period">.</span><small>EL CINE A TU MANERA</small></span></button><div className="side-label">DESCUBRE</div><nav className="side-nav" aria-label="Navegación principal">{navItems.slice(0,3).map(item => <button key={item.name} onClick={() => { setSection(item.name); setMobileNav(false) }} className={`nav-link ${section === item.name ? "active" : ""}`}><item.icon /><span>{item.name}</span>{section === item.name && <i />}</button>)}</nav><div className="side-label library-label">TU ESPACIO</div><nav className="side-nav"><button onClick={() => { setSection("Mis films"); setMobileNav(false) }} className={`nav-link ${section === "Mis films" ? "active" : ""}`}><Bookmark /><span>Mis films</span><span className="nav-count">{myContent.length || "—"}</span></button></nav><div className="sidebar-bottom"><div className="sidebar-note"><div className="note-icon"><Play fill="currentColor" /></div><p>Una buena historia<br />siempre encuentra<br />su momento.</p><span>TRAILERFIX · 2026</span></div><div className="sidebar-footer">HECHO PARA QUIENES AMAN LAS HISTORIAS</div></div></aside>
     {mobileNav && <button className="mobile-scrim" aria-label="Cerrar menú" onClick={() => setMobileNav(false)} />}
     <section className="main-area"><header className="topbar"><button className="mobile-menu icon-button" aria-label="Abrir menú" onClick={() => setMobileNav(true)}><Menu /></button><div className="breadcrumbs">TRAILERFIX <span>/</span> <strong>{section.toUpperCase()}</strong></div><label className="top-search"><Search /><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Buscar títulos..." aria-label="Buscar películas y series" /><kbd>⌘ K</kbd></label><div className="top-actions">{user ? <><span className="user-greeting">Hola, {user.name}</span><button className="login-button" onClick={logout}>Salir <span>↗</span></button></> : <button className="login-button" onClick={() => { setAuthError(""); setModal("login") }}>Entrar <span>↗</span></button>}</div></header>
@@ -357,7 +388,7 @@ export function TrailerfixApp() {
       {apiError ? <div className="state-panel"><div className="state-icon"><Clapperboard /></div><span className="eyebrow">CONEXIÓN PENDIENTE</span><h3>No podemos abrir la sala todavía.</h3><p>{apiError.includes("fetch") || apiError.includes("Failed") ? "Configura la URL de tu API en NEXT_PUBLIC_TRAILERFIX_API_URL y habilita CORS con credenciales para este frontend." : apiError}</p><button className="secondary-button" onClick={() => void loadContent()}>Reintentar <span>↻</span></button></div> : loading ? <div className="loading-state"><LoaderCircle className="spin" /> Cargando catálogo...</div> : section === "Mis films" && !user ? <div className="state-panel compact-state"><div className="state-icon"><Bookmark /></div><span className="eyebrow">TU COLECCIÓN PERSONAL</span><h3>Tu historia empieza con una cuenta.</h3><p>Inicia sesión para organizar lo que ya viste y descubrir qué sigue.</p><button className="primary-button" onClick={() => setModal("login")}>Iniciar sesión <LogIn /></button></div> : visibleContent.length ? <div className="film-grid">{visibleContent.map(item => <ContentCard key={item.id} item={item} onSelect={setSelected} onActor={openActor} status={statusFor(item)} onStatus={updateStatus} />)}</div> : <div className="state-panel compact-state"><div className="state-icon"><Film /></div><span className="eyebrow">{section === "Mis films" ? activeStatus === "WATCHED" ? "TUS HISTORIAS VISTAS" : "TU LISTA PERSONAL" : "NUEVOS TÍTULOS POR DESCUBRIR"}</span><h3>{section === "Mis films" ? activeStatus === "WATCHED" ? "Todavía no has marcado ninguna historia." : "Tu lista para ver está esperando." : query ? "No encontramos ese título." : "El catálogo aparecerá aquí."}</h3><p>{section === "Mis films" ? "Explora películas y series, luego guárdalas aquí." : "Prueba con otro título o cambia el filtro de género."}</p></div>}
     </section><footer className="page-footer"><span>TRAILERFIX © 2026</span><span>HECHO PARA CONTAR HISTORIAS</span></footer></div></section>
     {modal && <AuthDialog mode={modal} onClose={() => setModal(null)} onSubmit={submitAuth} error={authError} busy={busyAuth} setMode={value => { setAuthError(""); setModal(value) }} />}
-    {selected && <DetailDialog item={selected} onClose={() => setSelected(null)} onActor={openActor} onStatus={updateStatus} status={statusFor(selected)} />}
+    {selected && <DetailDialog item={selected} onClose={() => setSelected(null)} onActor={openActor} onStatus={updateStatus} onDelete={handleDeleteContent} user={user} status={statusFor(selected)} />}
     {createMovieOpen && <CreateMovieDialog onClose={() => setCreateMovieOpen(false)} onSubmit={createMovie} error={createMovieError} busy={createMovieBusy} />}
     {actor && <div className="actor-page"><header className="topbar"><button className="text-button" onClick={() => setActor(null)}>← Volver al catálogo</button><span className="breadcrumbs">TRAILERFIX <span>/</span> TALENTO</span></header><div className="actor-content"><div className="actor-intro"><span className="eyebrow">ENCUENTRA TODAS SUS HISTORIAS</span><div className="actor-portrait"><UserRound /></div><h1>{actorName(actor)}<span className="heading-period">.</span></h1><p>Una mirada a sus trabajos en películas y series.</p><span className="actor-note">PERFIL DE TALENTO · FILMOGRAFÍA</span></div><div className="actor-works"><div className="section-label"><span>EN SU FILMOGRAFÍA</span><span>{actorContent.length} títulos</span></div>{actorContent.length ? <div className="film-grid">{actorContent.map(item => <ContentCard key={item.id} item={item} onSelect={setSelected} onActor={openActor} status={statusFor(item)} onStatus={updateStatus} />)}</div> : <div className="state-panel compact-state"><div className="state-icon"><Film /></div><span className="eyebrow">FILMOGRAFÍA</span><h3>Estamos preparando sus créditos.</h3><p>Las películas y series en las que participa aparecerán aquí.</p></div>}</div></div></div>}
     {notice && <div className="toast-message" role="status">{notice}<button onClick={() => setNotice("")} aria-label="Cerrar aviso"><X /></button></div>}
