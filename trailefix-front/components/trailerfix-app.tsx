@@ -71,6 +71,8 @@ function AuthDialog({ mode, onClose, onSubmit, error, busy, setMode }: { mode: E
     {mode === "register" && <label>Nombre<input name="name" autoComplete="name" required placeholder="Tu nombre" /></label>}<label>Usuario<input name="username" autoComplete="username" required placeholder="Tu usuario" /></label><label>Contraseña<input name="password" type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} required minLength={6} placeholder="Al menos 6 caracteres" /></label>{error && <p className="form-error" role="alert">{error}</p>}<button className="primary-button auth-submit" disabled={busy}>{busy ? <LoaderCircle className="spin" /> : mode === "login" ? "Iniciar sesión" : "Crear cuenta"}</button></form><p className="switch-auth">{mode === "login" ? "¿Aún no tienes cuenta?" : "¿Ya tienes cuenta?"} <button onClick={() => setMode(mode === "login" ? "register" : "login")}>{mode === "login" ? "Regístrate" : "Inicia sesión"}</button></p></section></div>
 }
 
+const MOVIE_FORM_STORAGE_KEY = "trailerfix-create-movie-form"
+
 type MovieFormData = {
   type: "MOVIE"
   title: string
@@ -81,14 +83,42 @@ type MovieFormData = {
 }
 
 function CreateMovieDialog({ onClose, onSubmit, error, busy }: { onClose: () => void; onSubmit: (data: Partial<Content>) => void; error: string; busy: boolean }) {
-  const [formData, setFormData] = useState<MovieFormData>({
-    type: "MOVIE",
-    title: "",
-    durationMinutes: "",
-    description: "",
-    releaseYear: "",
-    trailerUrl: "",
+  const [formData, setFormData] = useState<MovieFormData>(() => {
+    // Load from localStorage on initial render
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem(MOVIE_FORM_STORAGE_KEY)
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          // Validate it's the right shape
+          if (parsed && typeof parsed === "object" && parsed.type === "MOVIE") {
+            return parsed as MovieFormData
+          }
+        }
+      } catch {
+        // Ignore parsing errors, use defaults
+      }
+    }
+    return {
+      type: "MOVIE",
+      title: "",
+      durationMinutes: "",
+      description: "",
+      releaseYear: "",
+      trailerUrl: "",
+    }
   })
+
+  // Save to localStorage whenever formData changes
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(MOVIE_FORM_STORAGE_KEY, JSON.stringify(formData))
+      } catch {
+        // Ignore storage errors (e.g., quota exceeded)
+      }
+    }
+  }, [formData])
 
   const handleChange = (field: keyof MovieFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -263,6 +293,10 @@ export function TrailerfixApp() {
     try {
       await api.createContent(data)
       setNotice("Película creada correctamente.")
+      // Clear saved form data on success
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(MOVIE_FORM_STORAGE_KEY)
+      }
       setCreateMovieOpen(false)
       await loadContent()
     } catch (error) {
